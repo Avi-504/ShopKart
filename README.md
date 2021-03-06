@@ -1,6 +1,8 @@
 # ShopKart
-
+## An App to allow users to stimulate selling items and buying them.
+No Real Payment is done, only business logic is implemented.
 A new Flutter project.
+Firebase as Db.
 
 ## Getting Started
 
