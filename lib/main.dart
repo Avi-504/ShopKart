@@ -1,0 +1,76 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import './screens/product_overview_screen.dart';
+import './screens/product_detail_screen.dart';
+import './screens/cart_screen.dart';
+import './screens/user_product_screen.dart';
+import './screens/orders_screen.dart';
+import './screens/edit_product_screen.dart';
+import './screens/auth_screen.dart';
+import './screens/splash_screen.dart';
+import './providers/auth.dart';
+import './providers/products.dart';
+import './providers/cart.dart';
+import './providers/orders.dart';
+// import './providers/product.dart';
+
+void main() => runApp(MyApp());
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (ctx) => Auth(),
+        ),
+        ChangeNotifierProxyProvider<Auth, Products>(
+          update: (ctx, auth, previousProducts) => Products(
+              auth.token,
+              previousProducts == null ? [] : previousProducts.items,
+              auth.userId),
+          create: (context) => null,
+        ),
+        ChangeNotifierProvider.value(
+          value: Cart(),
+        ),
+        ChangeNotifierProxyProvider<Auth, Orders>(
+          update: (ctx, auth, previousOrder) => Orders(auth.token,
+              previousOrder == null ? [] : previousOrder.orders, auth.userId),
+          create: (context) => null,
+        ),
+        // ChangeNotifierProxyProvider<Auth, Product>(
+        //   create: null,
+        //   update: (ctx, auth, previousProducts) => Product(),
+        // )
+      ],
+      child: Consumer<Auth>(
+        builder: (context, auth, _) => MaterialApp(
+          title: 'MyShop',
+          theme: ThemeData(
+            primarySwatch: Colors.pink,
+            accentColor: Colors.amber,
+            fontFamily: 'Lato',
+          ),
+          home: auth.isAuth
+              ? ProductOverviewScreen()
+              : FutureBuilder(
+                  future: auth.tryAutoLogin(),
+                  builder: (context, snapshot) =>
+                      snapshot.connectionState == ConnectionState.waiting
+                          ? SplashScreen()
+                          : AuthScreen(),
+                ),
+          routes: {
+            ProductDetailScreen.routeName: (ctx) => ProductDetailScreen(),
+            CartScreen.routeName: (ctx) => CartScreen(),
+            OrdersScreen.routeName: (ctx) => OrdersScreen(),
+            UserProductScreen.routeName: (ctx) => UserProductScreen(),
+            EditProductScreen.routeName: (ctx) => EditProductScreen(),
+          },
+        ),
+      ),
+    );
+  }
+}
